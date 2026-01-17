@@ -1,0 +1,37 @@
+[package]
+name = "axumApp"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tokio = { version = "1.49.0", features = ["full"]}
+futures = "0.3.31"
+axum = {version = "0.8.8"}
+
+
+tower = "0.5"
+tower-http = { version = "0.6.8", features = ["trace", "cors"] }
+
+serde = {version = "1.0.228", features = ["derive"]}
+serde_json = "1.0"
+
+uuid = {version = "1.19.0", features = ["v4", "serde"]}
+
+validator = {version = "0.20.0", features = ["derive"]}
+
+anyhow = "1.0"
+thiserror = "2.0"
+
+dotenvy = "0.15"
+
+tracing = "0.1"
+tracing-subscriber = {version = "0.3", features = ["env-filter"]}
+
+chrono = {version = "0.4.43", features = ["serde"]}
+async-trait = "0.1.89"
+
+mongodb = {version = "3.5.0"}
+bson = {version = "3.1.0", features = ["chrono-0_4", "uuid-1"]}
+
+[dev-dependencies]
+httpc-test = "0.1"

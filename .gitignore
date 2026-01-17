@@ -1,0 +1,13 @@
+# Rust
+/target
+Cargo.lock
+
+# Environment
+.env
+
+# IDEs
+.idea/
+*.iml
+
+# macOS
+.DS_Store
