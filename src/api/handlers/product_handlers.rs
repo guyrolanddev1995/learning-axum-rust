@@ -88,7 +88,7 @@ pub async fn get_active_products_by_category(
 pub async fn update_product(
     State(app_state): State<AppState>,
     Path(id): Path<Uuid>,
-    Json(payload): Json<UpdateProductRequest>
+    AppJson(payload): AppJson<UpdateProductRequest>
 ) -> Result<Json<ProductResponse>, ApiError>{
     payload.validate().unwrap();
 
@@ -132,7 +132,7 @@ pub async fn activate_product(
 pub async fn adjust_stock(
     State(app_state): State<AppState>,
     Path(id): Path<Uuid>,
-    Json(payload): Json<AdjustStockRequest>
+    AppJson(payload): AppJson<AdjustStockRequest>
 ) -> Result<Json<ProductResponse>, ApiError> {
     let product = app_state.product_service.adjust_stock(id, payload.quantity).await?;
     Ok(Json(ProductResponse::from(product)))

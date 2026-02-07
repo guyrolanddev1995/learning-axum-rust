@@ -1,23 +1,35 @@
 use mongodb::bson::oid::ObjectId;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+
 use crate::domain::entities::product::Product;
+use crate::infrastructure::database::models::uuid_as_string;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProductDocument {
     #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
     pub object_id: Option<ObjectId>,
-    #[serde(with = "uuid::serde::compact")]
+
+    #[serde(with = "uuid_as_string")]
     pub id: Uuid,
+
     pub name: String,
-    #[serde(with = "uuid::serde::compact")]
+
+    #[serde(with = "uuid_as_string")]
     pub category_id: Uuid,
+
     pub description: Option<String>,
+
     pub price: u32,
+
     pub stock: u32,
+
     pub sku: String,
+
     pub is_active: bool,
+
     pub created_at: chrono::DateTime<chrono::Utc>,
+
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
 

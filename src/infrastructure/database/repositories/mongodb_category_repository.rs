@@ -107,7 +107,6 @@ impl CategoryRepository for MongodbCategoryRepository {
 
         let result = self.collection
             .replace_one(doc! {"id": category.id.to_string()}, &doc)
-            .upsert(true)
             .await
             .map_err(|e| DomainError::InternalError(e.to_string()))?;
 

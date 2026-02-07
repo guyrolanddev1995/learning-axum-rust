@@ -1,3 +1,152 @@
+//! ```rust
+//! /*!
+//! CategoryService provides methods for managing and interacting with categories in a hierarchical structure.
+//!
+//! # Structs
+//! - `CategoryService`: Provides operations for categories, including creation, updates, deletion, and querying of categories.
+//! - `CategoryTree`: Represents a hierarchy of categories as a tree structure.
+//!
+//! # Associated Methods
+//!
+//! ## `CategoryService`
+//!
+//! ### `new`
+//! Creates a new instance of `CategoryService`.
+//!
+//! **Parameters**
+//! - `repository`: An Arc-wrapped implementation of the `CategoryRepository` trait.
+//! - `product_repository`: An Arc-wrapped implementation of the `ProductRepository` trait.
+//!
+//! **Returns**
+//! - A new `CategoryService` instance.
+//!
+//! ---
+//!
+//! ### `list_all_categories`
+//! Fetches all categories from the repository.
+//!
+//! **Returns**
+//! - `Ok(Vec<Category>)`: A list of all categories.
+//! - `Err(DomainError)`: If an error occurs during retrieval.
+//!
+//! ---
+//!
+//! ### `list_root_categories`
+//! Lists all root categories that have no parent.
+//!
+//! **Returns**
+//! - `Ok(Vec<Category>)`: A list of root categories.
+//! - `Err(DomainError)`: If an error occurs during retrieval.
+//!
+//! ---
+//!
+//! ### `get_category`
+//! Get a category by its unique identifier.
+//!
+//! **Parameters**
+//! - `id`: A `Uuid` representing the category's ID.
+//!
+//! **Returns**
+//! - `Ok(Category)`: The category corresponding to the given ID.
+//! - `Err(DomainError::NotFoundError)`: If the category is not found.
+//!
+//! ---
+//!
+//! ### `get_category_by_slug`
+//! Fetches a category by its slug.
+//!
+//! **Parameters**
+//! - `slug`: A `&str` representing the slug of the category.
+//!
+//! **Returns**
+//! - `Ok(Category)`: The category corresponding to the slug.
+//! - `Err(DomainError::NotFoundError)`: If the category is not found.
+//!
+//! ---
+//!
+//! ### `list_children`
+//! Lists all child categories of a given parent category.
+//!
+//! **Parameters**
+//! - `parent_id`: A `Uuid` representing the ID of the parent category.
+//!
+//! **Returns**
+//! - `Ok(Vec<Category>)`: A list of child categories.
+//! - `Err(DomainError)`: If an error occurs, such as if the parent category is not found.
+//!
+//! ---
+//!
+//! ### `create_category`
+//! Creates a new category.
+//!
+//! **Parameters**
+//! - `name`: A `String` representing the name of the category.
+//! - `description`: A `String` containing the description.
+//! - `parent_id`: An `Option<Uuid>` specifying the parent category's ID, if any.
+//!
+//! **Returns**
+//! - `Ok(Category)`: The newly created category.
+//! - `Err(DomainError)`: If validation or repository errors occur.
+//!
+//! ---
+//!
+//! ### `update_category`
+//! Updates an existing category's properties.
+//!
+//! **Parameters**
+//! - `id`: A `Uuid` representing the ID of the category to be updated.
+//! - `name`: An `Option<String>` for the new name.
+//! - `description`: An `Option<String>` for the new description.
+//! - `parent_id`: An `Option<Option<Uuid>>` indicating a new parent category ID or nullifying the relationship.
+//!
+//! **Returns**
+//! - `Ok(Category)`: The updated category.
+//! - `Err(DomainError)`: If validation or repository errors occur.
+//!
+//! ---
+//!
+//! ### `delete_category`
+//! Deletes a category if it has no children or products.
+//!
+//! **Parameters**
+//! - `id`: A `Uuid` representing the ID of the category to delete.
+//!
+//! **Returns**
+//! - `Ok(())`: If the category was deleted successfully.
+//! - `Err(DomainError)`: If the category has children, associated products, or if it doesn't exist.
+//!
+//! ---
+//!
+//! ### `activate_category`
+//! Marks a category as active.
+//!
+//! **Parameters**
+//! - `id`: A `Uuid` representing the category's ID.
+//!
+//! **Returns**
+//! - `Ok(Category)`: The updated category with active status.
+//! - `Err(DomainError)`: If the category cannot be found or an update error occurs.
+//!
+//! ---
+//!
+//! ### `deactivate_category`
+//! Marks a category as inactive.
+//!
+//! **Parameters**
+//! - `id`: A `Uuid` representing the category's ID.
+//!
+//! **Returns**
+//! - `Ok(Category)`: The updated category with inactive status.
+//! - `Err(DomainError)`: If the category cannot be found or an update error occurs.
+//!
+//! ---
+//!
+//! ### `get_category_tree`
+//! Builds a hierarchical tree of all categories, starting from the root categories.
+//!
+//! **Returns**
+//! - `Ok(Vec<CategoryTree>)`: A tree of categories with children.
+//! - `Err(DomainError)`:
 use std::sync::Arc;
 use uuid::Uuid;
 use crate::domain::entities::category::Category;
@@ -195,8 +344,9 @@ impl CategoryService {
 
     pub async fn get_category_tree(&self) -> Result<Vec<CategoryTree>, DomainError> {
         let all_categories = self.list_all_categories().await?;
+
         let roots = all_categories.iter()
-            .filter(|c| !c.is_root_category())
+            .filter(|c| c.is_root_category())
             .cloned()
             .collect::<Vec<_>>();
 

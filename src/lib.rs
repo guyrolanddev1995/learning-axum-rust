@@ -8,6 +8,7 @@ pub mod state;
 pub mod infrastructure;
 pub mod application;
 pub mod domain;
+mod test;
 
 pub async fn run(setting: Settings) -> anyhow::Result<()> {
     let state = AppState::new(&setting).await?;

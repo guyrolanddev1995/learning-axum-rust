@@ -6,7 +6,7 @@ use crate::api::handlers::category_handlers;
 
 pub fn router() -> Router<AppState> {
     Router::new()
-        .route("/api/categories", get(category_handlers::list_root_categories))
+        .route("/api/categories", get(category_handlers::category_list))
         .route("/api/categories/roots", get(category_handlers::list_root_categories))
         .route("/api/categories/tree", get(category_handlers::get_category_tree))
 
@@ -21,4 +21,4 @@ pub fn router() -> Router<AppState> {
         .route("/api/categories/slug/{slug}", get(category_handlers::get_category_by_slug))
 
         .route("/api/categories", post(category_handlers::create_category))
-}
+}   

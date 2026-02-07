@@ -54,7 +54,7 @@ pub async fn create_category(
     State(state): State<AppState>,
     Json(payload): Json<CreateCategoryDto>
 ) -> Result<(StatusCode, Json<CategoryResponse>), ApiError> {
-     payload.validate().unwrap();
+     payload.validate().map_err(ApiError::from_validation_errors)?;
 
     let category = state
         .category_service
@@ -69,7 +69,7 @@ pub async fn update_category(
     Path(id): Path<Uuid>,
     Json(payload): Json<UpdateCategoryDto>
 ) -> Result<Json<CategoryResponse>, ApiError> {
-    payload.validate().unwrap();
+    payload.validate().map_err(ApiError::from_validation_errors)?;
 
     let category = state
         .category_service

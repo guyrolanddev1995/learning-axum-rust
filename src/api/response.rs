@@ -16,6 +16,7 @@ pub enum ApiError {
     Validation(Vec<ValidationError>)
 }
 
+
 impl ApiError {
     pub fn from_validation_errors(errs: ValidationErrors) -> Self {
         let mut data = Vec::new();
@@ -30,7 +31,6 @@ impl ApiError {
                 data.push(ValidationError { field: field.to_string(), message });
             }
         }
-
         ApiError::Validation(data)
     }
 }
