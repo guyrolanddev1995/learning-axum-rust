@@ -58,7 +58,14 @@ impl From<DomainError> for ApiError {
             DomainError::InvalidPriceError => ApiError::Standard(StatusCode::BAD_REQUEST, error.to_string()),
             DomainError::InsufficientStockError => ApiError::Standard(StatusCode::BAD_REQUEST, error.to_string()),
             DomainError::InternalError(message) => ApiError::Standard(StatusCode::INTERNAL_SERVER_ERROR, message),
-            DomainError::ValidationError(message) => ApiError::Standard(StatusCode::BAD_REQUEST, message)
+            DomainError::ValidationError(message) => ApiError::Standard(StatusCode::BAD_REQUEST, message),
+            DomainError::EmailAlreadyExists => ApiError::Standard(StatusCode::BAD_REQUEST, error.to_string()),
+            DomainError::PasswordDoesNotMatch => ApiError::Standard(StatusCode::BAD_REQUEST, error.to_string()),
+            DomainError::InvalidTokenError => ApiError::Standard(StatusCode::UNAUTHORIZED, error.to_string()),
+            DomainError::TokenExpiredError => ApiError::Standard(StatusCode::UNAUTHORIZED, error.to_string()),
+            DomainError::UnauthorizedError => ApiError::Standard(StatusCode::UNAUTHORIZED, error.to_string()),
+            DomainError::InvalidCredentialsError => ApiError::Standard(StatusCode::UNAUTHORIZED, error.to_string()),
+            DomainError::InvalidRequestError => ApiError::Standard(StatusCode::FORBIDDEN, error.to_string())
         }
     }
 }

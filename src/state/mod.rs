@@ -1,19 +1,17 @@
 use crate::application::services::category_service::CategoryService;
 use crate::application::services::product_service::ProductService;
 use crate::config::settings::Settings;
-use crate::domain::repositories::{CategoryRepository, ProductRepository};
+use crate::domain::repositories::{CategoryRepository, ProductRepository, UserRepository};
 use crate::infrastructure::database::MongoDbConnection;
-use crate::infrastructure::database::repositories::{
-    MongodbCategoryRepository, MongodbProductCategory,
-};
+use crate::infrastructure::database::repositories::{MongodbCategoryRepository, MongodbProductCategory, MongodbUserRepository};
 use std::sync::Arc;
+use crate::domain::AuthService;
 
 #[derive(Clone)]
 pub struct AppState {
     pub product_service: ProductService,
     pub category_service: CategoryService,
-
-    pub api_key: String,
+    pub auth_service: AuthService,
 }
 
 impl AppState {
@@ -23,14 +21,17 @@ impl AppState {
 
         let category_repos = MongodbCategoryRepository::new(db);
         let product_repos = MongodbProductCategory::new(db);
+        let user_repos = MongodbUserRepository::new(db);
 
-        let (_, _) = tokio::join!(
+        let (_, _, _) = tokio::join!(
             category_repos.create_indexes(),
-            product_repos.create_indexes()
+            product_repos.create_indexes(),
+            user_repos.create_index()
         );
 
         let category_repository: Arc<dyn CategoryRepository> = Arc::new(category_repos);
         let product_repository: Arc<dyn ProductRepository> = Arc::new(product_repos);
+        let user_repository: Arc<dyn UserRepository> = Arc::new(user_repos);
 
         let category_service = CategoryService::new(
             Arc::clone(&category_repository),
@@ -42,10 +43,16 @@ impl AppState {
             Arc::clone(&category_repository),
         );
 
+        let auth_service = AuthService::new(
+            Arc::clone(&user_repository),
+            setting.jwt_secret.clone(),
+            setting.jwt_expiration_minutes
+        );
+
         Ok(Self {
             product_service,
             category_service,
-            api_key: "1234567890".to_string(),
+            auth_service,
         })
     }
 }

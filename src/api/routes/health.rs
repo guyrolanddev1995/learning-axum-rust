@@ -1,10 +1,10 @@
 use axum::{Json, Router};
-use axum::middleware::{from_fn, from_fn_with_state};
-use axum::routing::{get, post};
+use axum::error_handling::HandleErrorLayer;
+use axum::routing::{get};
 use serde_json::json;
-use tower::ServiceBuilder;
+use tower::{Layer, ServiceBuilder};
 use crate::api::handlers::app_handlers::app_handler;
-use crate::api::middleware::{api_key_middleware, auth_middleware, timing_middleware};
+use crate::api::middleware::{AuthLayer, LoggingLayer};
 use crate::state::AppState;
 
 async fn health_check() -> Json<serde_json::Value> {
@@ -16,8 +16,15 @@ async fn health_check() -> Json<serde_json::Value> {
 
 pub fn routes(state: AppState) -> Router<AppState> {
     Router::new().route("/health", get(health_check))
-        .route("/app", post(app_handler))
-        .layer(from_fn(timing_middleware))
-        .layer(from_fn(auth_middleware))
-        .layer(from_fn_with_state(state, api_key_middleware))
+        .route("/app", get(app_handler))
+        .layer(
+            ServiceBuilder::new()
+                .layer(
+                    HandleErrorLayer::new(|err: Box<dyn std::error::Error + Send + Sync>| async move {
+                        (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(json!({ "error": err.to_string() })))
+                    })
+                )
+                .layer(AuthLayer::new("123"))
+                .layer(LoggingLayer::new("api"))
+        )
 }

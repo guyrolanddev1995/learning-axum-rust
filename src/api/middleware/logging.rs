@@ -1,52 +1,65 @@
-use axum::Json;
-use axum::extract::{Request, State};
-use axum::http::StatusCode;
-use axum::middleware::Next;
-use axum::response::{IntoResponse, Response};
-use serde_json::json;
+use std::pin::Pin;
+use std::task::{Context, Poll};
 use std::time::Instant;
-use crate::state::AppState;
+use tower::{Layer, Service};
 
-pub async fn timing_middleware(req: Request, next: Next) -> Response {
-    let start = Instant::now();
-    let method = req.method().clone();
-    let uri = req.uri().clone();
-
-    let response = next.run(req).await;
-    let duration = start.elapsed();
-
-    println!("{method} {uri} - {:?} - {}", duration, response.status());
-
-    response
+#[derive(Clone)]
+pub struct LoggingMiddleware<S> {
+    pub inner: S,
+    pub prefix: &'static str
 }
 
-pub async fn auth_middleware(req: Request, next: Next) -> Result<Response, Response> {
-    let auth_header = req
-        .headers()
-        .get("Authorization")
-        .and_then(|v| v.to_str().ok());
+impl<S, Request> Service<Request> for LoggingMiddleware<S>
+where
+    S: Service<Request>,
+    S::Future: Send + 'static,
+    Request: std::fmt::Debug + Send + 'static,
+    S::Response: std::fmt::Debug + Send + 'static,
+    S::Error: std::fmt::Debug + Send + 'static,
+{
+    type Response = S::Response;
+    type Error = S::Error;
+    type Future = Pin<Box<dyn Future<Output = Result<S::Response, S::Error>> + Send>>;
 
-    match auth_header {
-        Some(token) if token.starts_with("Bearer") => Ok(next.run(req).await),
-        _ => Err((
-            StatusCode::UNAUTHORIZED,
-            Json(json!({
-                "error": "You not authorized to access this route"
-            })),
-        )
-            .into_response()),
+    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        self.inner.poll_ready(cx)
+    }
+
+    fn call(&mut self, req: Request) -> Self::Future {
+        let prefix = self.prefix;
+        println!("[{}] Incoming request: {:?}", prefix, req);
+        let start = Instant::now();
+        let future = self.inner.call(req);
+
+        Box::pin(async move {
+            let result = future.await;
+            let elapsed = start.elapsed();
+
+            match &result {
+                Ok(resp) => println!("[{}] ✅ Réponse ({:?}) : {:?}", prefix, elapsed, resp),
+                Err(err) => println!("[{}] ❌ Erreur ({:?}) : {:?}", prefix, elapsed, err),
+            }
+
+            result
+        })
     }
 }
 
-pub async fn api_key_middleware(
-    State(app_state): State<AppState>,
-    req: Request,
-    next: Next,
-) -> Result<Response, StatusCode> {
-    let provided_key = req.headers().get("X-API-KEY").and_then(|v| v.to_str().ok());
+#[derive(Clone)]
+pub struct LoggingLayer {
+    pub prefix: &'static str
+}
 
-    match provided_key {
-        Some(key) if key == app_state.api_key => Ok(next.run(req).await),
-        _ => Err(StatusCode::FORBIDDEN)
+impl LoggingLayer {
+    pub fn new(prefix: &'static str) -> Self {
+        Self { prefix }
+    }
+}
+
+impl<S> Layer<S> for LoggingLayer {
+    type Service = LoggingMiddleware<S>;
+
+    fn layer(&self, inner: S) -> Self::Service {
+        LoggingMiddleware {inner, prefix: self.prefix}
     }
 }

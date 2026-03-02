@@ -1,8 +1,10 @@
 mod category_document;
 mod product_document;
+mod user_document;
 
 pub use category_document::CategoryDocument;
 pub use product_document::ProductDocument;
+pub use user_document::UserDocument;
 
 pub mod uuid_as_string {
     use serde::{self, Deserialize, Deserializer, Serializer};

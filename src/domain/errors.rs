@@ -16,4 +16,25 @@ pub enum DomainError {
     
     #[error("{0}")]
     ValidationError(String),
+
+    #[error("Email already exists")]
+    EmailAlreadyExists,
+
+    #[error("Password does not match")]
+    PasswordDoesNotMatch,
+
+    #[error("Invalid token")]
+    InvalidTokenError,
+
+    #[error("Token expired")]
+    TokenExpiredError,
+
+    #[error("Unauthorized")]
+    UnauthorizedError,
+
+    #[error("Invalid credentials")]
+    InvalidCredentialsError,
+
+    #[error("Forbidden: insufficient permissions")]
+    InvalidRequestError,
 }
